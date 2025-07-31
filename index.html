@@ -86,6 +86,7 @@
       margin-right: auto;
       box-shadow: 0 2px 10px rgba(200, 210, 235, 0.15);
       border:none !important;
+      display: block;
     }
     hr {
       margin: 30px 0;
@@ -102,6 +103,7 @@
       display: block;
       margin: 12px 0 5px 0;
       color: #153769;
+      cursor: pointer;
     }
     input, select, textarea {
       width: 100%;
@@ -125,15 +127,20 @@
       border-color: #3065d8;
       outline: none;
     }
+    .event-options-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 36px;
+      align-items: center;
+      margin-bottom: 7px;
+    }
     .event-check {
       display: inline-flex;
       align-items: center;
-      margin-right: 20px;
-      margin-bottom: 7px;
       cursor: pointer;
       user-select: none;
     }
-    .event-check input[type="checkbox"] {
+    .event-check input[type='checkbox'] {
       width: 22px;
       height: 22px;
       margin-right: 8px;
@@ -156,9 +163,7 @@
       margin-left: auto;
       margin-right: auto;
     }
-    .submit-btn:hover {
-      background: #0e387a;
-    }
+    .submit-btn:hover { background: #0e387a; }
     .small {
       font-size: 0.95em;
       color: #636880;
@@ -180,6 +185,7 @@
     @media only screen and (max-width: 700px) {
       .form-container { padding: 0 2vw; max-width: 98vw; }
       .form-section, .yogasana-player-info-section, hr { padding: 0 2vw !important; max-width: 100vw; }
+      .event-options-row { flex-direction: column; gap: 8px; align-items: flex-start; }
     }
   </style>
 </head>
@@ -200,6 +206,7 @@
       </div>
     </div>
     <div class="note">This Championship is for North West District, Delhi Residents only. Other district athletes can join with NOC from their district.</div>
+    
     <div class="form-section">
       <ul class="small">
         <li>All Participants get E-Certificate.</li>
@@ -214,6 +221,7 @@
         <li>Events: Registration ₹500, Traditional Yoga ₹100, Artistic Solo ₹100, Artistic/Rhythmic Pair ₹100/player</li>
       </ul>
     </div>
+
     <form id="yogasana-form" novalidate>
       <div class="form-section">
         <h2>Personal Details</h2>
@@ -257,11 +265,25 @@
           <option>Other</option>
         </select>
 
-        <label>Events (Max two) <span style="color:#d72a1a;">*</span></label><br />
-        <span class="event-check"><input type="checkbox" name="events" value="Traditional Yogasana" id="event_trad_yoga" /> <label for="event_trad_yoga">Traditional Yogasana</label></span>
-        <span class="event-check"><input type="checkbox" name="events" value="Artistic Single" id="event_artistic_single" /> <label for="event_artistic_single">Artistic Single</label></span>
-        <span class="event-check"><input type="checkbox" name="events" value="Rhythmic Pair" id="event_rhythmic_pair" /> <label for="event_rhythmic_pair">Rhythmic Pair</label></span>
-        <span class="event-check"><input type="checkbox" name="events" value="Artistic Pair" id="event_artistic_pair" /> <label for="event_artistic_pair">Artistic Pair</label></span>
+        <label>Events (Max two) <span style="color:#d72a1a;">*</span></label>
+        <div class="event-options-row">
+          <span class="event-check">
+            <input type="checkbox" name="events" value="Traditional Yogasana" id="event_trad_yoga" />
+            <label for="event_trad_yoga">Traditional Yogasana</label>
+          </span>
+          <span class="event-check">
+            <input type="checkbox" name="events" value="Artistic Single" id="event_artistic_single" />
+            <label for="event_artistic_single">Artistic Single</label>
+          </span>
+          <span class="event-check">
+            <input type="checkbox" name="events" value="Rhythmic Pair" id="event_rhythmic_pair" />
+            <label for="event_rhythmic_pair">Rhythmic Pair</label>
+          </span>
+          <span class="event-check">
+            <input type="checkbox" name="events" value="Artistic Pair" id="event_artistic_pair" />
+            <label for="event_artistic_pair">Artistic Pair</label>
+          </span>
+        </div>
         <div class="small">Select maximum TWO events.</div>
       </div>
 
@@ -459,9 +481,7 @@
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
         if (rpInput && apInput) {
           apInput.value = rpInput.value;
-          if (field !== 'age') {
-            apInput.readOnly = true;
-          }
+          if (field !== 'age') apInput.readOnly = true;
         }
       });
     }
@@ -483,12 +503,8 @@
           input.value = null;
         } else {
           input.value = '';
-          if(input.name.endsWith('_age')) {
-            input.readOnly = true;
-          }
-          if(input.name.startsWith('ap_p1_')){
-            input.readOnly = false;
-          }
+          if(input.name.endsWith('_age')) input.readOnly = true;
+          if(input.name.startsWith('ap_p1_')) input.readOnly = false;
         }
       });
     }
@@ -562,7 +578,6 @@
         });
         return;
       }
-      // Default logic - show individual selected events
       selectedEvents.forEach(e => {
         if (sections[e]) sections[e].style.display = 'block';
       });
