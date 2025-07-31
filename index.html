@@ -94,7 +94,6 @@
       margin-bottom: 7px;
       transition: border-color 0.15s;
       box-sizing: border-box;
-      box-sizing: border-box;
     }
     input[type='file'] {
       background: transparent;
@@ -270,7 +269,7 @@
 
       <hr />
 
-      <!-- New Yogasana Player Information Section -->
+      <!-- Yogasana Player Information Section -->
       <div class="form-section yogasana-player-info-section">
         <h2>Yogasana Player Information</h2>
         <label>Description (optional)</label>
@@ -440,152 +439,206 @@
   </div>
 
   <script>
-    // Limit max 2 checkboxes in Events section
+    // Limit max 2 checkboxes in Events section and update conditional display
     const eventCheckboxes = document.querySelectorAll('input[name="events"]');
-    eventCheckboxes.forEach(cb => {
-      cb.addEventListener('change', (e) => {
-        const checkedBoxes = [...eventCheckboxes].filter(i => i.checked);
-        if (checkedBoxes.length > 2) {
-          e.target.checked = false;
-          alert('You can select maximum 2 events.');
+    const sections = {
+      'Traditional Yogasana': document.querySelector('.traditional-yogasana-section'),
+      'Artistic Single': document.querySelector('.artistic-yogasana-section'),
+      'Rhythmic Pair': document.querySelector('.rhythmic-pair-section'),
+      'Artistic Pair': document.querySelector('.artistic-pair-section'),
+      'Yogasana Player Info': document.querySelector('.yogasana-player-info-section')
+    };
+    const yogPlayer2Div = document.querySelector('.yogasana-player-info-section .player2-subsection');
+
+    function clearInputs(container) {
+      if (!container) return;
+      container.querySelectorAll('input, select, textarea').forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        } else if (input.type === 'file') {
+          input.value = null;
+        } else {
+          input.value = '';
+          if (input.name && input.name.endsWith('_age')) input.readOnly = true;
+          if (input.name && input.name.startsWith('ap_p1_')) input.readOnly = false;
         }
       });
-    });
+    }
 
-    // Helper to calculate age from DOB
+    function updateSections() {
+      const selectedEvents = [...document.querySelectorAll('input[name="events"]:checked')].map(cb => cb.value);
+      for (const sec of Object.values(sections)) {
+        if (sec) sec.style.display = 'none';
+      }
+      if (yogPlayer2Div) yogPlayer2Div.style.display = 'none';
+
+      function hasBoth(e1,e2){return selectedEvents.includes(e1)&&selectedEvents.includes(e2);}
+
+      if (selectedEvents.length === 2 && hasBoth('Traditional Yogasana', 'Artistic Single')) {
+        sections['Yogasana Player Info'].style.display = 'block';
+        return;
+      }
+      if (selectedEvents.length === 2 && hasBoth('Rhythmic Pair', 'Traditional Yogasana')) {
+        sections['Yogasana Player Info'].style.display = 'block';
+        if(yogPlayer2Div) yogPlayer2Div.style.display = 'block';
+        return;
+      }
+      if (selectedEvents.length === 2 && hasBoth('Artistic Pair','Traditional Yogasana')) {
+        sections['Yogasana Player Info'].style.display = 'block';
+        if(yogPlayer2Div) yogPlayer2Div.style.display = 'block';
+        return;
+      }
+      if (selectedEvents.length === 2 && hasBoth('Rhythmic Pair','Artistic Single')){
+        sections['Yogasana Player Info'].style.display = 'block';
+        if(yogPlayer2Div) yogPlayer2Div.style.display = 'block';
+        return;
+      }
+      if (selectedEvents.length === 2 && hasBoth('Artistic Pair','Artistic Single')){
+        sections['Yogasana Player Info'].style.display = 'block';
+        if(yogPlayer2Div) yogPlayer2Div.style.display = 'block';
+        return;
+      }
+      if (selectedEvents.length === 2 && hasBoth('Artistic Pair','Rhythmic Pair')){
+        sections['Rhythmic Pair'].style.display = 'block';
+        sections['Artistic Pair'].style.display = 'block';
+        return;
+      }
+      // Default: show only selected single event's section
+      selectedEvents.forEach(eName => {
+        if(sections[eName]) sections[eName].style.display = 'block';
+      });
+    }
+
+    function handleEventSelection(e) {
+      const checked = [...document.querySelectorAll('input[name="events"]:checked')];
+      if (checked.length > 2) {
+        e.target.checked = false;
+        alert('You can select maximum 2 events.');
+        return;
+      }
+      updateSections();
+    }
+
+    eventCheckboxes.forEach(cb => cb.addEventListener('change', handleEventSelection));
+
+    document.addEventListener('DOMContentLoaded', updateSections);
+
+    // Calculate age helper
     function calculateAge(dobStr) {
       if (!dobStr) return '';
       const dob = new Date(dobStr);
-      const refDate = new Date('2025-01-01T00:00:00');
+      const refDate = new Date('2025-01-01');
       let age = refDate.getFullYear() - dob.getFullYear();
       const m = refDate.getMonth() - dob.getMonth();
-      if (m < 0 || (m === 0 && refDate.getDate() < dob.getDate())) {
-        age--;
-      }
+      if (m < 0 || (m === 0 && refDate.getDate() < dob.getDate())) age--;
       return age >= 0 ? age : '';
     }
 
-    // On DOB change, update connected age fields
-    ['yogasana_p1_dob', 'yogasana_p2_dob', 'trad_yoga_dob', 'artistic_yoga_dob', 'rp_p1_dob', 'rp_p2_dob', 'ap_p1_dob', 'ap_p2_dob'].forEach(dobName => {
-      const dobInput = document.querySelector(`input[name="${dobName}"]`);
-      if (dobInput) {
-        dobInput.addEventListener('change', () =>{
-          const ageName = dobName.replace('_dob', '_age');
-          const ageInput = document.querySelector(`input[name="${ageName}"]`);
-          if (ageInput) ageInput.value = calculateAge(dobInput.value);
+    // Attach DOB listeners to update age fields
+    const dobFields = ['yogasana_p1_dob','yogasana_p2_dob','trad_yoga_dob','artistic_yoga_dob','rp_p1_dob','rp_p2_dob','ap_p1_dob','ap_p2_dob'];
+    dobFields.forEach(name => {
+      const dob = document.querySelector(`input[name="${name}"]`);
+      if(dob){
+        dob.addEventListener('change', () => {
+          const ageField = document.querySelector(`input[name="${name.replace('_dob','_age')}"]`);
+          if(ageField){
+            ageField.value = calculateAge(dob.value);
+          }
         });
       }
     });
 
-    // Synchronize Rhythmic Pair Player 1 info to Artistic Pair Player 1 inputs (read-only)
-    function syncRpP1ToApP1() {
-      const rpP1Fields = ['name', 'father', 'dob', 'mobile', 'email'];
-      rpP1Fields.forEach(field => {
+    // Sync Rhythmic Pair Player1 to Artistic Pair Player1 (readonly)
+    function syncRpP1ToApP1(){
+      ['name','father','dob','mobile','email'].forEach(field => {
         const rpInput = document.querySelector(`input[name="rp_p1_${field}"]`);
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
-        if (rpInput && apInput) {
+        if(rpInput && apInput){
           apInput.value = rpInput.value;
           apInput.readOnly = true;
         }
       });
-      // Age is readonly and synced manually
-      const rpDobInput = document.querySelector('input[name="rp_p1_dob"]');
-      const apAgeInput = document.querySelector('input[name="ap_p1_age"]');
-      if(rpDobInput && apAgeInput){
-        apAgeInput.value = calculateAge(rpDobInput.value);
-        apAgeInput.readOnly = true;
+      const rpDob = document.querySelector('input[name="rp_p1_dob"]');
+      const apAge = document.querySelector('input[name="ap_p1_age"]');
+      if(rpDob && apAge){
+        apAge.value = calculateAge(rpDob.value);
+        apAge.readOnly = true;
       }
     }
 
-    // Enable or disable artistic pair player1 readonly based on sync status
-    function updateSyncApP1Readonly(enableReadonly) {
-      const apP1Fields = ['name', 'father', 'dob', 'mobile', 'email'];
-      apP1Fields.forEach(field => {
-        const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
-        if (apInput) apInput.readOnly = enableReadonly;
-      });
-      const apAgeInput = document.querySelector('input[name="ap_p1_age"]');
-      if (apAgeInput) apAgeInput.readOnly = true;
-    }
-
-    // Show/hide player 2 info block on Yogasana Player Information
-    const yogPlayer2Div = document.querySelector('.yogasana-player-info-section .player2-subsection');
-
-    // Implement your updateSections logic here if needed (omitted for brevity)
-
-    // Form submission handler with file upload and SheetDB POST
+    // Form submission: upload files and send data to SheetDB
     document.getElementById('yogasana-form').addEventListener('submit', async function(e){
       e.preventDefault();
       const form = e.target;
-      const data = {};
-      const fileFields = ['photo', 'birth_cert', 'aadhar_front', 'aadhar_back', 'payment_receipt'];
+      const fileFields = ['photo','birth_cert','aadhar_front','aadhar_back','payment_receipt'];
       let fileUrls = {};
 
       // Helper to read file as base64
-      function readFileAsBase64(file) {
-        return new Promise((resolve, reject) => {
+      function readFileAsBase64(file){
+        return new Promise((resolve,reject)=>{
           const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onload = ()=> resolve(reader.result.split(',')[1]);
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
       }
 
-      // Upload each file and get Drive links
+      // Upload files to Google Apps Script Web App
       for(const field of fileFields){
         const input = form.elements[field];
         if(input && input.files.length){
-          try {
+          try{
             const file = input.files[0];
-            const base64 = await readFileAsBase64(file);
-            const GAS_URL = 'https://script.google.com/macros/s/AKfycbwnqvsXZv6Ov6I2_NujkvvMqe4KNk7BJ0vMcvNLwkxfYTMpfh1rJVl9ueoRcRqCaMD4AQ/exec'; // Replace with your Apps Script URL
+            const base64Data = await readFileAsBase64(file);
+            const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL';  // REPLACE this URL
             const payload = new URLSearchParams();
-            payload.append('file_data', base64);
+            payload.append('file_data', base64Data);
             payload.append('file_name', file.name);
             payload.append('file_type', file.type);
-            let response = await fetch(GAS_URL, {method: 'POST', body: payload});
-            let driveUrl = await response.text();
+            const response = await fetch(GAS_URL, {method:'POST', body:payload});
+            const driveUrl = await response.text();
             fileUrls[field] = driveUrl;
-          } catch (error) {
-            alert(`Failed to upload ${field}. Try again.`);
+          }catch(err){
+            alert(`Failed to upload file for ${field}. Please try again.`);
             return;
           }
         }
       }
 
-      // Collect other form inputs (excluding files and submit button)
-      Array.from(form.elements).forEach(input => {
-        if (input.name && input.type !== 'file' && input.type !== 'submit' && !(input.name in fileUrls)) {
-          if (input.type === 'checkbox') {
-            if (input.checked) {
-              if (data[input.name]) data[input.name] += ', ' + input.value;
-              else data[input.name] = input.value;
+      // Collect remaining form fields (excluding files and submit button)
+      const data = {};
+      for(const el of form.elements){
+        if(el.name && el.type !== 'file' && el.type !== 'submit'){
+          if(el.type === 'checkbox'){
+            if(el.checked){
+              if(data[el.name]) data[el.name] += ', ' + el.value;
+              else data[el.name] = el.value;
             }
           } else {
-            data[input.name] = input.value;
+            data[el.name] = el.value;
           }
         }
-      });
-
-      // Insert file URL fields
+      }
+      // Attach uploaded file URLs
       Object.assign(data, fileUrls);
 
       // Post data to SheetDB
-      const SHEETDB_URL = 'https://sheetdb.io/api/v1/5etutih450ztw'; // Replace with your SheetDB URL
-      try {
-        const resp = await fetch(SHEETDB_URL, {
+      const SHEETDB_URL = 'YOUR_SHEETDB_URL';  // REPLACE this URL
+      try{
+        const res = await fetch(SHEETDB_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data })
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({data})
         });
-        if (resp.ok) {
-          alert('Registration successful!');
+        if(res.ok){
+          alert('Registration successfully submitted!');
           form.reset();
+          updateSections();
         } else {
-          alert('Error submitting form! Please try again.');
+          alert('Failed to submit form. Please try again later.');
         }
-      } catch (err) {
-        alert('Network error! Please try again.');
+      }catch(err){
+        alert('Network error. Please check your connection and try again.');
       }
     });
   </script>
