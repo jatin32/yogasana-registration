@@ -538,7 +538,7 @@
           try {
             const file = input.files[0];
             const base64 = await readFileAsBase64(file);
-            const GAS_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL'; // Replace with your Apps Script URL
+            const GAS_URL = 'https://script.google.com/macros/s/AKfycbwnqvsXZv6Ov6I2_NujkvvMqe4KNk7BJ0vMcvNLwkxfYTMpfh1rJVl9ueoRcRqCaMD4AQ/exec'; // Replace with your Apps Script URL
             const payload = new URLSearchParams();
             payload.append('file_data', base64);
             payload.append('file_name', file.name);
@@ -571,7 +571,7 @@
       Object.assign(data, fileUrls);
 
       // Post data to SheetDB
-      const SHEETDB_URL = 'YOUR_SHEETDB_URL'; // Replace with your SheetDB URL
+      const SHEETDB_URL = 'https://sheetdb.io/api/v1/5etutih450ztw'; // Replace with your SheetDB URL
       try {
         const resp = await fetch(SHEETDB_URL, {
           method: 'POST',
