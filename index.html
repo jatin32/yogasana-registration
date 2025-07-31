@@ -145,6 +145,13 @@
       padding-left: 15px;
       margin-top: 12px;
     }
+    /* Remove blue border for yogasana-player-info-section for consistent style */
+    .yogasana-player-info-section {
+      border: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      margin-bottom: 26px;
+    }
     /* Readonly style for synced inputs */
     input[readonly] {
       background: #e1e6ec;
@@ -258,8 +265,8 @@
 
       <!-- New Yogasana Player Information Section -->
       <div 
-        class="form-section yogasana-player-info-section" 
-        style="display:none; border: 2px solid #174ea6; padding: 20px; border-radius: 9px;">
+        class="form-section yogasana-player-info-section"
+        style="display:none;">
         <h2>Yogasana Player Information</h2>
         <label>Description (optional)</label>
         <input name="yogasana_desc" type="text" />
@@ -447,15 +454,16 @@
 
     // Synchronize Rhythmic Pair Player 1 info to Artistic Pair Player 1 inputs (read-only)
     function syncRpP1ToApP1() {
-      const rpP1Fields = ['name', 'father', 'dob', 'age', 'mobile', 'email'];
-      rpP1Fields.forEach(field => {
+      const fieldsToSync = ['name', 'father', 'dob', 'age', 'mobile', 'email'];
+      fieldsToSync.forEach((field) => {
         const rpInput = document.querySelector(`input[name="rp_p1_${field}"]`);
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
         if (rpInput && apInput) {
-          // Copy values from rp to ap
           apInput.value = rpInput.value;
-          // Set Artistic Pair Player 1 inputs to readonly except for age which is always readonly
-          if(field !== 'age') apInput.readOnly = true;
+          // Make Artistic Pair Player 1 inputs readonly except age (age input already readonly)
+          if (field !== 'age') {
+            apInput.readOnly = true;
+          }
         }
       });
     }
@@ -463,7 +471,7 @@
     // Enable or disable artistic pair player1 readonly based on sync status
     function updateSyncApP1Readonly(enableReadonly) {
       const apP1Fields = ['name', 'father', 'dob', 'mobile', 'email'];
-      apP1Fields.forEach(field => {
+      apP1Fields.forEach((field) => {
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
         if (apInput) apInput.readOnly = enableReadonly;
       });
@@ -627,17 +635,13 @@
       }
 
       // Default single or other cases (show relevant individual sections)
+      for (const sec of Object.values(sections)) {
+        if (sec) sec.style.display = 'none';
+      }
       selectedEvents.forEach(eventName => {
         const sec = sections[eventName];
         if (sec) sec.style.display = 'block';
       });
-
-      // Hide others if not selected
-      for (const [eventName, sec] of Object.entries(sections)) {
-        if (eventName !== 'Yogasana Player Info' && !selectedEvents.includes(eventName)) {
-          if(sec) clearInputs(sec);
-        }
-      }
 
       // Hide new Yogasana Player Info section and player2 by default here
       if(sections['Yogasana Player Info']){
