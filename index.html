@@ -65,6 +65,7 @@
       display: block;
       margin: 12px 0 5px 0;
       color: #153769;
+      cursor: pointer;
     }
     input,
     select,
@@ -103,13 +104,22 @@
       margin-bottom: 12px;
       margin-top: 25px;
     }
+    /* Bigger checkboxes and labels styling */
     .event-check {
-      display: inline-block;
-      margin-right: 16px;
+      display: inline-flex;
+      align-items: center;
+      margin-right: 20px;
       margin-bottom: 7px;
       cursor: pointer;
       user-select: none;
     }
+    .event-check input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+
     .submit-btn {
       font-weight: bold;
       margin-top: 18px;
@@ -145,13 +155,6 @@
       padding-left: 15px;
       margin-top: 12px;
     }
-    /* Remove blue border for yogasana-player-info-section for consistent style */
-    .yogasana-player-info-section {
-      border: none !important;
-      padding: 0 !important;
-      border-radius: 0 !important;
-      margin-bottom: 26px;
-    }
     /* Readonly style for synced inputs */
     input[readonly] {
       background: #e1e6ec;
@@ -176,7 +179,7 @@
         margin-right: 0;
       }
       .event-check {
-        display: block;
+        display: flex;
       }
     }
   </style>
@@ -254,10 +257,10 @@
           <option>Other</option>
         </select>
         <label>Events (Max two) <span style="color:#d72a1a;">*</span></label><br />
-        <span class="event-check"><input type="checkbox" name="events" value="Traditional Yogasana" /> Traditional Yogasana</span>
-        <span class="event-check"><input type="checkbox" name="events" value="Artistic Single" /> Artistic Single</span>
-        <span class="event-check"><input type="checkbox" name="events" value="Rhythmic Pair" /> Rhythmic Pair</span>
-        <span class="event-check"><input type="checkbox" name="events" value="Artistic Pair" /> Artistic Pair</span>
+        <span class="event-check"><input type="checkbox" name="events" value="Traditional Yogasana" id="event_trad_yoga" /> <label for="event_trad_yoga" style="display:inline;">Traditional Yogasana</label></span>
+        <span class="event-check"><input type="checkbox" name="events" value="Artistic Single" id="event_artistic_single" /> <label for="event_artistic_single" style="display:inline;">Artistic Single</label></span>
+        <span class="event-check"><input type="checkbox" name="events" value="Rhythmic Pair" id="event_rhythmic_pair" /> <label for="event_rhythmic_pair" style="display:inline;">Rhythmic Pair</label></span>
+        <span class="event-check"><input type="checkbox" name="events" value="Artistic Pair" id="event_artistic_pair" /> <label for="event_artistic_pair" style="display:inline;">Artistic Pair</label></span>
         <div class="small">Select maximum TWO events.</div>
       </div>
 
@@ -265,8 +268,8 @@
 
       <!-- New Yogasana Player Information Section -->
       <div 
-        class="form-section yogasana-player-info-section"
-        style="display:none;">
+        class="form-section yogasana-player-info-section" 
+        style="display:none; border: 2px solid #174ea6; padding: 20px; border-radius: 9px;">
         <h2>Yogasana Player Information</h2>
         <label>Description (optional)</label>
         <input name="yogasana_desc" type="text" />
@@ -280,7 +283,6 @@
         <input name="yogasana_p1_age" type="number" min="10" max="55" readonly />
         <label>Mobile/WhatsApp Number <span style="color:#d72a1a;">*</span></label>
         <input name="yogasana_p1_mobile" type="text" />
-
         <!-- Player 2 info group, initially hidden unless needed -->
         <div class="player2-subsection" style="display:none;">
           <h3>Player 2 Information</h3>
@@ -454,16 +456,15 @@
 
     // Synchronize Rhythmic Pair Player 1 info to Artistic Pair Player 1 inputs (read-only)
     function syncRpP1ToApP1() {
-      const fieldsToSync = ['name', 'father', 'dob', 'age', 'mobile', 'email'];
-      fieldsToSync.forEach((field) => {
+      const rpP1Fields = ['name', 'father', 'dob', 'age', 'mobile', 'email'];
+      rpP1Fields.forEach(field => {
         const rpInput = document.querySelector(`input[name="rp_p1_${field}"]`);
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
         if (rpInput && apInput) {
+          // Copy all fields including mobile and email now correctly
           apInput.value = rpInput.value;
-          // Make Artistic Pair Player 1 inputs readonly except age (age input already readonly)
-          if (field !== 'age') {
-            apInput.readOnly = true;
-          }
+          // Set Artistic Pair Player 1 inputs to readonly except age which is always readonly
+          if(field !== 'age') apInput.readOnly = true;
         }
       });
     }
@@ -471,7 +472,7 @@
     // Enable or disable artistic pair player1 readonly based on sync status
     function updateSyncApP1Readonly(enableReadonly) {
       const apP1Fields = ['name', 'father', 'dob', 'mobile', 'email'];
-      apP1Fields.forEach((field) => {
+      apP1Fields.forEach(field => {
         const apInput = document.querySelector(`input[name="ap_p1_${field}"]`);
         if (apInput) apInput.readOnly = enableReadonly;
       });
@@ -511,8 +512,6 @@
         if (sec) sec.style.display = 'none';
       }
 
-      // Determine logic per your conditions:
-
       // Helper for multiselection check
       function hasBoth(e1, e2) {
         return selectedEvents.includes(e1) && selectedEvents.includes(e2);
@@ -532,7 +531,7 @@
           } else {
             input.value = '';
             if(input.name.endsWith('_age')) {
-              input.readOnly = true; // Keep age readonly
+              input.readOnly = true;
             }
             if(input.name.startsWith('ap_p1_')) {
               input.readOnly = false;
@@ -541,49 +540,34 @@
         });
       }
 
-      // Case 1: Both events selected are Traditional Yogasana + Artistic Single
+      // Case 1: Traditional Yogasana + Artistic Single (show new Yogasana Player Info, Player2 hidden)
       if (selectedEvents.length === 2 &&
          hasBoth('Traditional Yogasana', 'Artistic Single')) {
-        // Show ONLY new Yogasana Player Info section with Player1 only
         sections['Yogasana Player Info'].style.display = 'block';
-
-        // Player 2 info hidden
         if (yogPlayer2Div) yogPlayer2Div.style.display = 'none';
 
-        // Hide old Traditional and Artistic Single sections
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Rhythmic Pair']) clearInputs(sections['Rhythmic Pair']);
-        if (sections['Artistic Pair']) clearInputs(sections['Artistic Pair']);
-
-        // Other individual sections hidden
+        [sections['Traditional Yogasana'], sections['Artistic Single'], sections['Rhythmic Pair'], sections['Artistic Pair']]
+          .forEach(s => clearInputs(s));
         return;
       }
 
       // Case 2: Rhythmic Pair + Traditional Yogasana
       if (selectedEvents.length === 2 &&
-          hasBoth('Rhythmic Pair', 'Traditional Yogasana') ) {
+          hasBoth('Rhythmic Pair', 'Traditional Yogasana')) {
         sections['Yogasana Player Info'].style.display = 'block';
-        if (yogPlayer2Div) yogPlayer2Div.style.display = 'block'; // Player 2 fillable
-
-        // Hide old Traditional and Rhythmic sections and Artistic Single, Artistic Pair
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Rhythmic Pair']) clearInputs(sections['Rhythmic Pair']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Artistic Pair']) clearInputs(sections['Artistic Pair']);
+        if (yogPlayer2Div) yogPlayer2Div.style.display = 'block';
+        [sections['Traditional Yogasana'], sections['Rhythmic Pair'], sections['Artistic Single'], sections['Artistic Pair']]
+          .forEach(s => clearInputs(s));
         return;
       }
 
       // Case 3: Artistic Pair + Traditional Yogasana
       if (selectedEvents.length === 2 &&
-          hasBoth('Artistic Pair', 'Traditional Yogasana') ) {
+          hasBoth('Artistic Pair', 'Traditional Yogasana')) {
         sections['Yogasana Player Info'].style.display = 'block';
         if (yogPlayer2Div) yogPlayer2Div.style.display = 'block';
-
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Artistic Pair']) clearInputs(sections['Artistic Pair']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Rhythmic Pair']) clearInputs(sections['Rhythmic Pair']);
+        [sections['Traditional Yogasana'], sections['Artistic Pair'], sections['Artistic Single'], sections['Rhythmic Pair']]
+          .forEach(s => clearInputs(s));
         return;
       }
 
@@ -592,11 +576,8 @@
           hasBoth('Rhythmic Pair', 'Artistic Single')) {
         sections['Yogasana Player Info'].style.display = 'block';
         if (yogPlayer2Div) yogPlayer2Div.style.display = 'block';
-
-        if (sections['Rhythmic Pair']) clearInputs(sections['Rhythmic Pair']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Artistic Pair']) clearInputs(sections['Artistic Pair']);
+        [sections['Rhythmic Pair'], sections['Artistic Single'], sections['Traditional Yogasana'], sections['Artistic Pair']]
+          .forEach(s => clearInputs(s));
         return;
       }
 
@@ -605,103 +586,106 @@
           hasBoth('Artistic Pair', 'Artistic Single')) {
         sections['Yogasana Player Info'].style.display = 'block';
         if (yogPlayer2Div) yogPlayer2Div.style.display = 'block';
-
-        if (sections['Artistic Pair']) clearInputs(sections['Artistic Pair']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Rhythmic Pair']) clearInputs(sections['Rhythmic Pair']);
+        [sections['Artistic Pair'], sections['Artistic Single'], sections['Traditional Yogasana'], sections['Rhythmic Pair']]
+          .forEach(s => clearInputs(s));
         return;
       }
 
       // Case 6: Artistic Pair + Rhythmic Pair
       if (selectedEvents.length === 2 &&
           hasBoth('Artistic Pair', 'Rhythmic Pair')) {
-        // Show both Rhythmic Pair and Artistic Pair sections
         if(sections['Rhythmic Pair']) sections['Rhythmic Pair'].style.display = 'block';
         if(sections['Artistic Pair']) sections['Artistic Pair'].style.display = 'block';
-        // Sync Player 1 info from Rhythmic Pair to Artistic Pair and make Artistic Pair's Player 1 fields readonly
         syncRpP1ToApP1();
         updateSyncApP1Readonly(true);
 
-        // Hide others:
-        if (sections['Traditional Yogasana']) clearInputs(sections['Traditional Yogasana']);
-        if (sections['Artistic Single']) clearInputs(sections['Artistic Single']);
-        if (sections['Yogasana Player Info']) {
-          clearInputs(sections['Yogasana Player Info']);
-          sections['Yogasana Player Info'].style.display = 'none';
-        }
+        [sections['Traditional Yogasana'], sections['Artistic Single'], sections['Yogasana Player Info']]
+          .forEach(s => {
+            clearInputs(s);
+            if (s) s.style.display = 'none';
+          });
 
         return;
       }
 
-      // Default single or other cases (show relevant individual sections)
-      for (const sec of Object.values(sections)) {
-        if (sec) sec.style.display = 'none';
-      }
+      // Default: Show individual selected event sections
       selectedEvents.forEach(eventName => {
         const sec = sections[eventName];
         if (sec) sec.style.display = 'block';
       });
 
-      // Hide new Yogasana Player Info section and player2 by default here
-      if(sections['Yogasana Player Info']){
+      // Hide unselected sections and clear
+      for (const [eventName, sec] of Object.entries(sections)) {
+        if (eventName !== 'Yogasana Player Info' && !selectedEvents.includes(eventName)) {
+          clearInputs(sec);
+          if (sec) sec.style.display = 'none';
+        }
+      }
+
+      // Hide new Yogasana Player Info and player2 by default here
+      if (sections['Yogasana Player Info']) {
         clearInputs(sections['Yogasana Player Info']);
         sections['Yogasana Player Info'].style.display = 'none';
       }
-      if(yogPlayer2Div) yogPlayer2Div.style.display = 'none';
+      if (yogPlayer2Div) yogPlayer2Div.style.display = 'none';
 
-      // Remove readonly from Artistic Pair Player 1 fields
       updateSyncApP1Readonly(false);
     }
 
-    // Attach DOB listeners to calculate age
+    // Attach DOB listeners to calculate age and handle syncing
     function attachDOBListeners(containerSelector) {
       const container = document.querySelector(containerSelector);
       if (!container) return;
       const dobInputs = container.querySelectorAll('input[type="date"]');
       dobInputs.forEach(dobInput => {
         dobInput.addEventListener('change', () => {
+          // Compute age input name with special cases for yogasana player info
           let ageInputName = dobInput.name.replace('_dob', '_age');
-          // Special case for Yogasana Player info 1 & 2
           if (dobInput.name.startsWith('yogasana_p1_dob')) ageInputName = 'yogasana_p1_age';
-          else if(dobInput.name.startsWith('yogasana_p2_dob')) ageInputName = 'yogasana_p2_age';
-
+          else if (dobInput.name.startsWith('yogasana_p2_dob')) ageInputName = 'yogasana_p2_age';
           const ageInput = container.querySelector(`input[name="${ageInputName}"]`);
           if (ageInput) {
             ageInput.value = calculateAge(dobInput.value);
           }
-
-          // For Artistic Pair Player 1, if synced with Rhythmic Pair Player 1, update readonly fields
+          // For Rhythmic Pair Player 1 DOB field, sync Artistic Pair Player 1 info when changed
           if (containerSelector === '.rhythmic-pair-section' && dobInput.name === 'rp_p1_dob') {
             syncRpP1ToApP1();
           }
-          // For Rhythmic Pair Player 1 DOB: sync to Artistic Pair Player 1 fields (readonly)
-          if(containerSelector === '.rhythmic-pair-section' && dobInput.name === 'rp_p1_dob') {
+          // Also trigger sync for other rhymthic pair Player 1 inputs changes
+          if (containerSelector === '.rhythmic-pair-section' && dobInput.name.startsWith('rp_p1_')) {
             syncRpP1ToApP1();
           }
         });
       });
     }
+    // Attach additional input event listeners for rhytmic pair p1 to sync on text input changes
+    function attachSyncListeners() {
+      const fields = ['name', 'father', 'mobile', 'email'];
+      fields.forEach(field => {
+        const rpInput = document.querySelector(`input[name="rp_p1_${field}"]`);
+        if (rpInput) {
+          rpInput.addEventListener('input', () => {
+            syncRpP1ToApP1();
+          });
+        }
+      });
+    }
 
-    // Attach DOB listeners on page load for all relevant sections
     ['.traditional-yogasana-section', '.artistic-yogasana-section', '.rhythmic-pair-section', '.artistic-pair-section', '.yogasana-player-info-section'].forEach(attachDOBListeners);
 
-    // Attach listener for Yogasana Player Info Player 1 DOB separately (calculate age)
+    attachSyncListeners();
+
+    // Attach DOB listeners for Yogasana Player Info separately
     const yogP1DOB = document.querySelector('input[name="yogasana_p1_dob"]');
-    if (yogP1DOB) {
-      yogP1DOB.addEventListener('change', () => {
-        const ageInput = document.querySelector('input[name="yogasana_p1_age"]');
-        if (ageInput) ageInput.value = calculateAge(yogP1DOB.value);
-      });
-    }
-    // Player 2 DOB
+    if (yogP1DOB) yogP1DOB.addEventListener('change', () => {
+      const ageInput = document.querySelector('input[name="yogasana_p1_age"]');
+      if (ageInput) ageInput.value = calculateAge(yogP1DOB.value);
+    });
     const yogP2DOB = document.querySelector('input[name="yogasana_p2_dob"]');
-    if (yogP2DOB) {
-      yogP2DOB.addEventListener('change', () => {
-        const ageInput = document.querySelector('input[name="yogasana_p2_age"]');
-        if (ageInput) ageInput.value = calculateAge(yogP2DOB.value);
-      });
-    }
+    if (yogP2DOB) yogP2DOB.addEventListener('change', () => {
+      const ageInput = document.querySelector('input[name="yogasana_p2_age"]');
+      if (ageInput) ageInput.value = calculateAge(yogP2DOB.value);
+    });
 
     // Initialize display state on load
     updateSections();
@@ -716,7 +700,6 @@
         alert('Please select maximum two events only.');
         e.preventDefault();
       }
-      // Additional validation can go here if needed
     });
   </script>
 </body>
